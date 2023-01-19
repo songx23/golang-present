@@ -1,0 +1,18 @@
+Common mistakes when dealing with slices
+21 February 2023
+
+Song Xue
+song.xue@digio.com.au
+
+* What we will cover?
+
+- Slice vs Array
+- Slice Length vs Capacity
+- Copying a Slice
+- Nil vs Empty Slices
+- Slice Append Side-Effects
+- Slice Memory Leak
+
+* Slice
+
+The *MOST* used data structure in Go.

@@ -1,2 +1,2 @@
 # golang-present
- Presentaion for talks related to Go
+ Presentation for talks related to Go
