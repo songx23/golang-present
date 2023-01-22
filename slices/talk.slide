@@ -1,10 +1,10 @@
-# Common mistakes when dealing with slices
+# Slice, the little-known side
 21 February 2023
 
 Song Xue
 Lead Software Engineer, Digio
 song.xue@digio.com.au
-https://github.com/songx23
+https://github.com/songx23/golang-present
 
 ## What we will cover?
 
@@ -17,6 +17,46 @@ https://github.com/songx23
 
 ## Slice
 
-The *MOST* used data structure in Go.
+Probably the *MOST* used data structure in Go.
 
-.play ./examples/slice.go
+
+// Very hard to not write something to do with slice in day-to-day coding.
+
+**Slice vs Array**
+
+The definition of arrays vs slices confused me when I started learning Go.
+
+// Go Tour didn't mention array at all. Made me think that slice is the Go way of calling an array.
+
+- What is an array?
+
+- What is a slice?
+
+// A slice holds a pointer to the backing array plus other contextual information which we will cover very soon.
+
+- How are they different?
+
+// The basic difference between a slice and an array is that a slice is a reference to a contiguous segment of an array.
+// Unlike an array, which is a value-type, slice is a reference type. A slice can be a complete array or a part of an array,
+// indicated by the start and end index. A slice, therefore, is also an array that pours a context of dynamism onto the
+// underlying array, which otherwise is a static contiguous memory allocation.
+
+## Length & Capacity
+
+Slice has more context on top of the underlying array. The 2 most important pieces of information are **Length** and
+**Capacity**
+
+- What is the length of a slice?
+
+// Length is the number of elements the slice contains
+
+- What is the capacity of a slice?
+
+// Capacity is the number of elements in the backing array
+
+.play examples/length_capacity.go
+
+## Copying a slice
+
+
+    original := []string{"a", "b", "c"}
