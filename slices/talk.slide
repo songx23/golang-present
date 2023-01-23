@@ -56,7 +56,35 @@ Slice has more context on top of the underlying array. The 2 most important piec
 
 .play examples/length_capacity.go
 
-## Copying a slice
+## Slice initialisation (nil vs empty)
 
+a slice is empty if its length is equal to 0
+a slice is nil if it equals to nil
+
+// main difference:
+// initializing a nil slice doesn't require any allocation
+// regardless of whether a slice is nil, calling the `append` function works, `range` operator also works
+
+// returning a nil slice is preferred as it doesn't require any allocations
+// when handling json, nil slice -> empty field (omit), empty slice -> []
+
+## How can we make use of capacity and length?
+
+// Map from a slice of type A to a slice of type B
+// Explain the backing array copying
+// Present the performance difference between initialise with length & capacity vs without.
+// Benchmark solution: 3 options
+// Empty Slice
+// Given Capacity (all-rounder)
+// Given Length (fastest but not always possible)
 
     original := []string{"a", "b", "c"}
+
+## A gotcha based on how slice is copied
+
+// s1 []int 3, 6
+// s2 s1[1:3] => []int 2, 5
+// s1 and s2 backing array is the same, hence change 1, change both
+// s2 append til full
+// s2 backing array is different now, hence s2 doesn't affect s1 anymore
+
