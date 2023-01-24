@@ -6,21 +6,14 @@ Lead Software Engineer, Digio
 song.xue@digio.com.au
 https://github.com/songx23/golang-present
 
-## What we will cover?
-
-- Slice vs Array
-- Slice Length vs Capacity
-- Copying a Slice
-- Nil vs Empty Slices
-- Slice Append Side-Effects
-- Slice Memory Leak
-
 ## Slice
 
 Probably the *MOST* used data structure in Go.
 
 
 // Very hard to not write something to do with slice in day-to-day coding.
+// The most familiar data structure has some dark secrets, which could cause unexpected behaviours.
+// Let's uncover them today.
 
 **Slice vs Array**
 
@@ -80,11 +73,100 @@ a slice is nil if it equals to nil
 
     original := []string{"a", "b", "c"}
 
+## 2 built-in functions: copy and append
+
+## Another gotcha of the built-in copy function
+
+//  src := []int{0,1,2}
+//  var dst []int
+//  copy(dst, src)
+//  fmt.Println(dst)
+//  this prints []
+//  To use copy effectively, it’s essential to understand that the number of elements copied to the destination slice
+// corresponds to the minimum between:
+// The source slice’s length
+// The destination slice’s length
+
 ## A gotcha based on how slice is copied
 
-// s1 []int 3, 6
-// s2 s1[1:3] => []int 2, 5
-// s1 and s2 backing array is the same, hence change 1, change both
-// s2 append til full
-// s2 backing array is different now, hence s2 doesn't affect s1 anymore
+// s1 []int 1, 2, 3   l=3, c=3  later become 1, 2, 10
+// s2 s1[1:2] => []int 2   l=1, c=2
+// s3 append(s2, 10) => []int 2, 10 l=2, c=2
+// s1, s2, s3 backing array is the same, hence change 1, change both s1 and s3
+// s3 append til full
+// s3 backing array is different now, hence s3 doesn't affect s1 anymore
 
+// be careful when passing a slice into a function. The function could change the slice elements. For defensive reasons,
+// we can make a copy of the slice and then modify it. Function programming. Immutable. Or use full slice expression
+// [low:high:max] capacity = max-low
+
+// When using slicing, we must remember that we can face a situation leading to unintended side effects.
+// If the resulting slice has a length smaller than its capacity, append can mutate the original slice.
+// If we want to restrict the range of possible side effects, we can use either a slice copy or the full slice expression,
+// which prevents us from doing a copy.
+
+## Memory leaks
+
+## Leaking capacity
+
+// Remember that when creating a slice, the capacity will follow the original slice.
+// for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
+// As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
+// The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
+// Using a slice copy is the solution to prevent such a case.
+
+// Using full slice expression doesn't help in this case even calling `runtime.GC()` specifically
+
+
+## Leaking pointer
+
+    func main() {
+        foos := make([]Foo, 1_000)
+        printAlloc()
+
+        for i := 0; i < len(foos); i++ {
+            foos[i] = Foo {
+                v : make([]byte, 1024*1024),
+            }
+        }
+        printAlloc()
+
+        two := keepFirstTwoElementsOnly(foos)
+        runtime.GC()
+        printAlloc()
+        runtime.KeepAlive(two)
+    }
+
+    func keepFirstTwoElementsOnly(foos []Foo) []Foo {
+        return foos[:2]
+    }
+
+    func printAlloc() {
+        var m runtime.MemStats
+        runtime.ReadMemStats(&m)
+        fmt.Printf("%d KB\n", m.Alloc/1024)
+    }
+
+// It’s essential to keep this rule in mind when working with slices:
+// if the element is a pointer or a struct with pointer fields, the elements won’t be reclaimed by the GC.
+// In our example, because Foo contains a slice (and a slice is a pointer on top of a backing array),
+// the remaining 998 Foo elements and their slice aren’t reclaimed. Therefore, even though these 998 elements can’t be accessed,
+// they stay in memory as long as the variable returned by keepFirstTwoElementsOnly is referenced.
+
+// The solution is again use `copy` function and make a 2 length slice
+
+// In each topic, give a key takeaways
+
+
+## Recap: what we covered?
+
+Definitions
+- Slice vs Array
+- Slice Length vs Capacity
+- Slice initialisations
+
+Potential problems with slices
+- performance: map from a slice to another slice
+- side-effects: built-in copy function
+- side-effects: built-in append function
+- performance: Slice Memory Leak
