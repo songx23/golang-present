@@ -9,30 +9,58 @@ https://github.com/songx23/golang-present
 ## Slice
 
 Probably the *MOST* used data structure in Go.
-
-
 // Very hard to not write something to do with slice in day-to-day coding.
-// The most familiar data structure has some dark secrets, which could cause unexpected behaviours.
+
+
+But even the most familiar data structure has some dark secrets, which could cause unexpected problems.
 // Let's uncover them today.
 
-**Slice vs Array**
+Firstly, let's go over some basic concepts.
+
+## Slice vs Array
 
 The definition of arrays vs slices confused me when I started learning Go.
 
-// Go Tour didn't mention array at all. Made me think that slice is the Go way of calling an array.
+The Go Tour didn't mention "array" at all which made me think that slice is the Go way of calling an array.
 
-- What is an array?
+In day-to-day work, I feel like people are using these 2 concepts interchangeably.
 
-- What is a slice?
+## What is an array?
 
+An array is a homogeneous data structure of a fixed length. Two important characteristics here:
+1. Homogeneous: can only hold elements of the same type
+2. Fixed length: can't be
+Presentation:
+`var arr [10]int`
+
+## What is a slice?
+
+A slice is a reference to a contiguous segment of an array (backing array).
+Since it's a reference, slice is a reference type (pointer).
 // A slice holds a pointer to the backing array plus other contextual information which we will cover very soon.
 
-- How are they different?
+.image ./images/slice-definition.png
 
-// The basic difference between a slice and an array is that a slice is a reference to a contiguous segment of an array.
-// Unlike an array, which is a value-type, slice is a reference type. A slice can be a complete array or a part of an array,
-// indicated by the start and end index. A slice, therefore, is also an array that pours a context of dynamism onto the
-// underlying array, which otherwise is a static contiguous memory allocation.
+## How are they different?
+
+1. Array is a value type (like primitive types). Slice is a reference type (pointer).
+
+.play ./examples/value-vs-reference/main.go
+
+## How are they different?
+
+2. Array is a fixed length data structure. Slice refers to a backing array hence its length is not fixed.
+
+```go
+	// ARRAY
+	s := [3]int{1, 2, 3}
+	s = append(s, 1) // compile error
+	fmt.Println(s)
+	// SLICE
+	s1 := []int{1, 2, 3}
+	s1 = append(s1, 4)
+	fmt.Println(s1) // [1, 2, 3, 4]
+```
 
 ## Length & Capacity
 
@@ -47,31 +75,103 @@ Slice has more context on top of the underlying array. The 2 most important piec
 
 // Capacity is the number of elements in the backing array
 
-.play examples/length_capacity.go
+.play examples/length-capacity/main.go
+
+## Slice initialisation
+
+.play examples/slice-init/main.go
+
+// a slice is empty if its length is equal to 0
+// a slice is nil if it equals to nil
 
 ## Slice initialisation (nil vs empty)
 
-a slice is empty if its length is equal to 0
-a slice is nil if it equals to nil
+**Key takeaways:**
+- Initializing a nil slice doesn't require any allocation.
+That's why we normally don't see the third and fourth slice initialisation.
+- Regardless of whether a slice is nil, calling the `append` function works, `range` operator also works.
+- Returning a nil slice is preferred as it doesn't require any allocations.
+- When we need to marshal a slice to json.
 
-// main difference:
-// initializing a nil slice doesn't require any allocation
-// regardless of whether a slice is nil, calling the `append` function works, `range` operator also works
+nil slice -> `{}`
 
-// returning a nil slice is preferred as it doesn't require any allocations
-// when handling json, nil slice -> empty field (omit), empty slice -> []
+empty slice -> `{"slice": []}`
 
 ## How can we make use of capacity and length?
 
-// Map from a slice of type A to a slice of type B
+Imagine if we have a mapper function like below:
+
+
+
+```go
+func mapWithNilSlice(a []string) []string {
+	var b []string
+	for _, v := range a {
+		b = append(b, strings.ToUpper(v))
+	}
+	return b
+}
+```
+
+## What happens under the hood?
+
+.image ./images/slice-backing-array-copy-1.png
+
+.image ./images/slice-backing-array-copy-2.png
+
+## What happens under the hood?
+
+.image ./images/slice-backing-array-copy-3.png
+
+.image ./images/slice-backing-array-copy-4.png
+
 // Explain the backing array copying
-// Present the performance difference between initialise with length & capacity vs without.
+
+## Give a helping hand
+
+There's no reason why we don't give Go a helping hand. If we declare the capacity beforehand, we could avoid copying the backing array.
+
+```go
+func mapWithPredefinedCapacity(a []string) []string {
+	b := make([]string, 0, len(a))
+	for _, v := range a {
+		b = append(b, strings.ToUpper(v))
+	}
+	return b
+}
+```
+
+Even further, we can pre-populate the elements with default value like below. This saves us from appending elements to the mapped slice.
+
+```go
+func mapWithPredefinedLength(a []string) []string {
+	b := make([]string, len(a))
+	for i := range a {
+		b[i] = strings.ToUpper(a[i])
+	}
+	return b
+}
+```
+
+## Benchmark
+
+Benchmark test code can be found in `./examples/slice-backing-array-copy/main_test.go`.
+
+Here are the results:
+
+```
+Benchmark_mapWithNilSlice
+Benchmark_mapWithNilSlice-10              	     438	   2599940 ns/op
+Benchmark_mapWithPredefinedCapacity
+Benchmark_mapWithPredefinedCapacity-10    	     720	   1663941 ns/op
+Benchmark_mapWithPredefinedLength
+Benchmark_mapWithPredefinedLength-10      	     746	   1600166 ns/op
+```
 // Benchmark solution: 3 options
 // Empty Slice
 // Given Capacity (all-rounder)
 // Given Length (fastest but not always possible)
 
-    original := []string{"a", "b", "c"}
 
 ## 2 built-in functions: copy and append
 
