@@ -230,6 +230,33 @@ the destination slice’s length.
 
 ## Leaking capacity
 
+.play ./examples/memory-leak/capacity-leak/main.go
+
+## Fix memory leak
+
+.play ./examples/memory-leak/leak-fix/main.go
+
+## Full slice expression
+
+`slice[low:high:max]`.
+
+- Low: inclusive index
+- High: exclusive index
+- Max: determines the slices capacity.
+```
+Capacity = Max - Low
+```
+
+## Key Takeaway
+
+As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
+The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
+
+Solutions:
+
+1. Make a slice copy (copy only part of the original slice to reduce its capacity).
+2. Use full slice expression to control the new slice capacity.
+
 // Remember that when creating a slice, the capacity will follow the original slice.
 // for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
 // As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
@@ -237,47 +264,6 @@ the destination slice’s length.
 // Using a slice copy is the solution to prevent such a case.
 
 // Using full slice expression doesn't help in this case even calling `runtime.GC()` specifically
-
-
-## Leaking pointer
-
-    func main() {
-        foos := make([]Foo, 1_000)
-        printAlloc()
-
-        for i := 0; i < len(foos); i++ {
-            foos[i] = Foo {
-                v : make([]byte, 1024*1024),
-            }
-        }
-        printAlloc()
-
-        two := keepFirstTwoElementsOnly(foos)
-        runtime.GC()
-        printAlloc()
-        runtime.KeepAlive(two)
-    }
-
-    func keepFirstTwoElementsOnly(foos []Foo) []Foo {
-        return foos[:2]
-    }
-
-    func printAlloc() {
-        var m runtime.MemStats
-        runtime.ReadMemStats(&m)
-        fmt.Printf("%d KB\n", m.Alloc/1024)
-    }
-
-// It’s essential to keep this rule in mind when working with slices:
-// if the element is a pointer or a struct with pointer fields, the elements won’t be reclaimed by the GC.
-// In our example, because Foo contains a slice (and a slice is a pointer on top of a backing array),
-// the remaining 998 Foo elements and their slice aren’t reclaimed. Therefore, even though these 998 elements can’t be accessed,
-// they stay in memory as long as the variable returned by keepFirstTwoElementsOnly is referenced.
-
-// The solution is again use `copy` function and make a 2 length slice
-
-// In each topic, give a key takeaways
-
 
 ## Recap: what we covered?
 
