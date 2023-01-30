@@ -14,8 +14,7 @@ Probably the *MOST* used data structure in Go.
 
 But even the most familiar data structure has some dark secrets, which could cause unexpected problems.
 // Let's uncover them today.
-
-Firstly, let's go over some basic concepts.
+// Firstly, let's go over some basic concepts.
 
 ## Slice vs Array
 
@@ -27,15 +26,18 @@ In day-to-day work, I feel like people are using these 2 concepts interchangeabl
 
 ## What is an array?
 
-An array is a homogeneous data structure of a fixed length. Two important characteristics here:
+An array is a homogeneous data structure of a fixed length.
+Two important characteristics:
 1. Homogeneous: can only hold elements of the same type
-2. Fixed length: can't be
+2. Fixed length: can't be extended
+
 Presentation:
 `var arr [10]int`
 
 ## What is a slice?
 
 A slice is a reference to a contiguous segment of an array (backing array).
+// can be part of the backing array or the full backing array
 Since it's a reference, slice is a reference type (pointer).
 // A slice holds a pointer to the backing array plus other contextual information which we will cover very soon.
 
@@ -64,16 +66,11 @@ Since it's a reference, slice is a reference type (pointer).
 
 ## Length & Capacity
 
-Slice has more context on top of the underlying array. The 2 most important pieces of information are **Length** and
-**Capacity**
+Slice has context information on top of the underlying array. The 2 most important pieces of information are **Length** and
+**Capacity**.
 
-- What is the length of a slice?
-
-// Length is the number of elements the slice contains
-
-- What is the capacity of a slice?
-
-// Capacity is the number of elements in the backing array
+//The length of a slice is the number of elements it contains.
+//The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
 
 .play examples/length-capacity/main.go
 
@@ -87,10 +84,10 @@ Slice has more context on top of the underlying array. The 2 most important piec
 ## Slice initialisation (nil vs empty)
 
 **Key takeaways:**
-- Initializing a nil slice doesn't require any allocation.
-That's why we normally don't see the third and fourth slice initialisation.
+- Initializing a nil slice doesn't require any allocation. Returning a nil slice is preferred as it doesn't require any allocations.
+
+*That's why we normally don't see the third and fourth slice initialisation.*
 - Regardless of whether a slice is nil, calling the `append` function works, `range` operator also works.
-- Returning a nil slice is preferred as it doesn't require any allocations.
 - When we need to marshal a slice to json.
 
 nil slice -> `{}`
@@ -174,7 +171,7 @@ Benchmark_mapWithPredefinedLength-10      	     746	   1600166 ns/op
 
 **Key takeaway**:
 
-When initialising a slice, if we know its maximum possible capacity, most likely we should declare it instead of creating a nil slice.
+When initialising a slice, if we know its maximum possible capacity, in most cases, we should declare it with max capacity instead of creating a nil slice.
 
 ## 2 built-in functions relates to slices
 
@@ -189,14 +186,14 @@ What could possibly go wrong here?
 
 ## Gotcha of the built-in copy function
 
+.play ./examples/slice-copy-correct/main.go
+
 **Key takeaway**:
 
-The number of elements copied to the destination slice is determined by the **minimum** between
+The number of elements copied to the destination slice is determined by the **minimum** between:
 
 
-the source slice’s length &
-
-the destination slice’s length.
+the source slice’s **length** & the destination slice’s **length**.
 
 
 ## Slice appending side-effects
@@ -273,10 +270,10 @@ Definitions
 - Slice initialisations
 
 Potential problems with slices
-- performance: map from a slice to another slice
-- side-effects: built-in copy function
-- side-effects: built-in append function
-- performance: Slice Memory Leak
+- Performance: map from a slice to another slice
+- Side-effects: built-in copy function
+- Side-effects: built-in append function
+- Performance: slice memory leak
 
 ## Special Thanks
 

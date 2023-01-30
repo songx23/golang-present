@@ -1,9 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"runtime"
-
-	"github.com/songx23/golang-present/slices/examples/memory-leak/log"
 )
 
 func main() {
@@ -14,7 +13,9 @@ func main() {
 		fbs = append(fbs, fiveBts)
 	}
 	runtime.GC()
-	log.PrintAlloc()
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	fmt.Printf("%.6f KB\n", float64(m.Alloc)/1_024)
 	runtime.KeepAlive(fbs)
 }
 
