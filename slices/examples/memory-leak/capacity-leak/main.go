@@ -15,7 +15,7 @@ func main() {
 	runtime.GC()
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	fmt.Printf("%.6f KB\n", float64(m.Alloc)/1_024)
+	fmt.Printf("%.2f MB\n", float64(m.Alloc)/1_024/1_000)
 	runtime.KeepAlive(fbs)
 }
 

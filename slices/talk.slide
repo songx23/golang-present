@@ -229,10 +229,6 @@ the source slice’s **length** & the destination slice’s **length**.
 
 .play ./examples/memory-leak/capacity-leak/main.go
 
-## Fix memory leak
-
-.play ./examples/memory-leak/leak-fix/main.go
-
 ## Full slice expression
 
 `slice[low:high:max]`.
@@ -244,15 +240,23 @@ the source slice’s **length** & the destination slice’s **length**.
 Capacity = Max - Low
 ```
 
+## Trying to fix memory leak
+
+.play ./examples/memory-leak/full-slice-expression/main.go
+
+
+## Fix memory leak
+
+.play ./examples/memory-leak/leak-fix/main.go
+
 ## Key Takeaway
 
 As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
 The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
 
-Solutions:
+Solution:
 
 1. Make a slice copy (copy only part of the original slice to reduce its capacity).
-2. Use full slice expression to control the new slice capacity.
 
 // Remember that when creating a slice, the capacity will follow the original slice.
 // for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
