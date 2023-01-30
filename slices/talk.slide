@@ -1,0 +1,288 @@
+# Slice, the little-known side
+21 February 2023
+
+Song Xue
+Lead Software Engineer, Digio
+song.xue@digio.com.au
+https://github.com/songx23/golang-present
+
+## Slice
+
+Probably the *MOST* used data structure in Go.
+// Very hard to not write something to do with slice in day-to-day coding.
+
+
+But even the most familiar data structure has some dark secrets, which could cause unexpected problems.
+// Let's uncover them today.
+// Firstly, let's go over some basic concepts.
+
+## Slice vs Array
+
+The definition of arrays vs slices confused me when I started learning Go.
+
+The Go Tour didn't mention "array" at all which made me think that slice is the Go way of calling an array.
+
+In day-to-day work, I feel like people are using these 2 concepts interchangeably.
+
+## What is an array?
+
+An array is a homogeneous data structure of a fixed length.
+Two important characteristics:
+1. Homogeneous: can only hold elements of the same type
+2. Fixed length: can't be extended
+
+Presentation:
+`var arr [10]int`
+
+## What is a slice?
+
+A slice is a reference to a contiguous segment of an array (backing array).
+// can be part of the backing array or the full backing array
+Since it's a reference, slice is a reference type (pointer).
+// A slice holds a pointer to the backing array plus other contextual information which we will cover very soon.
+
+.image ./images/slice-definition.png
+
+## How are they different?
+
+1. Array is a value type (like primitive types). Slice is a reference type (pointer).
+
+.play ./examples/value-vs-reference/main.go
+
+## How are they different?
+
+2. Array is a fixed length data structure. Slice refers to a backing array hence its length is not fixed.
+
+```go
+	// ARRAY
+	s := [3]int{1, 2, 3}
+	s = append(s, 1) // compile error
+	fmt.Println(s)
+	// SLICE
+	s1 := []int{1, 2, 3}
+	s1 = append(s1, 4)
+	fmt.Println(s1) // [1, 2, 3, 4]
+```
+
+## Length & Capacity
+
+Slice has context information on top of the underlying array. The 2 most important pieces of information are **Length** and
+**Capacity**.
+
+//The length of a slice is the number of elements it contains.
+//The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
+
+.play examples/length-capacity/main.go
+
+## Slice initialisation
+
+.play examples/slice-init/main.go
+
+// a slice is empty if its length is equal to 0
+// a slice is nil if it equals to nil
+
+## Slice initialisation (nil vs empty)
+
+**Key takeaways:**
+- Initializing a nil slice doesn't require any allocation. Returning a nil slice is preferred as it doesn't require any allocations.
+
+*That's why we normally don't see the third and fourth slice initialisation.*
+- Regardless of whether a slice is nil, calling the `append` function works, `range` operator also works.
+- When we need to marshal a slice to json.
+
+nil slice -> `{}`
+
+empty slice -> `{"slice": []}`
+
+## How can we make use of capacity and length?
+
+Imagine if we have a mapper function like below:
+
+
+
+```go
+func mapWithNilSlice(a []string) []string {
+	var b []string
+	for _, v := range a {
+		b = append(b, strings.ToUpper(v))
+	}
+	return b
+}
+```
+
+## What happened under the hood?
+
+.image ./images/slice-backing-array-copy-1.png
+
+.image ./images/slice-backing-array-copy-2.png
+
+## What happened under the hood?
+
+.image ./images/slice-backing-array-copy-3.png
+
+.image ./images/slice-backing-array-copy-4.png
+
+// Explain the backing array copying
+
+## Give a helping hand
+
+There's no reason why we don't give Go a helping hand. If we declare the capacity beforehand, we could avoid copying the backing array.
+
+```go
+func mapWithPredefinedCapacity(a []string) []string {
+	b := make([]string, 0, len(a))
+	for _, v := range a {
+		b = append(b, strings.ToUpper(v))
+	}
+	return b
+}
+```
+
+Even further, we can pre-populate the elements with default value like below. This saves us from appending elements to the mapped slice.
+
+```go
+func mapWithPredefinedLength(a []string) []string {
+	b := make([]string, len(a))
+	for i := range a {
+		b[i] = strings.ToUpper(a[i])
+	}
+	return b
+}
+```
+
+## Benchmark
+
+Benchmark test code can be found in `./examples/slice-backing-array-copy/main_test.go`.
+
+Here are the results:
+
+```
+Benchmark_mapWithNilSlice
+Benchmark_mapWithNilSlice-10              	     438	   2599940 ns/op
+Benchmark_mapWithPredefinedCapacity
+Benchmark_mapWithPredefinedCapacity-10    	     720	   1663941 ns/op
+Benchmark_mapWithPredefinedLength
+Benchmark_mapWithPredefinedLength-10      	     746	   1600166 ns/op
+```
+// Benchmark solution: 3 options
+// Empty Slice
+// Given Capacity (all-rounder)
+// Given Length (fastest but not always possible)
+
+**Key takeaway**:
+
+When initialising a slice, if we know its maximum possible capacity, in most cases, we should declare it with max capacity instead of creating a nil slice.
+
+## 2 built-in functions relates to slices
+
+1. `copy`
+2. `append`
+
+## Gotcha of the built-in copy function
+
+.play ./examples/slice-copy/main.go
+
+What could possibly go wrong here?
+
+## Gotcha of the built-in copy function
+
+.play ./examples/slice-copy-correct/main.go
+
+**Key takeaway**:
+
+The number of elements copied to the destination slice is determined by the **minimum** between:
+
+
+the source slice’s **length** & the destination slice’s **length**.
+
+
+## Slice appending side-effects
+
+.play ./examples/slice-append/main.go
+
+## What happened under the hood?
+
+.image ./images/slice-append-1.png
+.image ./images/slice-append-2.png
+
+## What happened under the hood?
+.image ./images/slice-append-3.png
+
+## Slice append side effects
+
+**Key takeaways**:
+
+- Be careful when passing a slice into a function. The function could change the slice elements. For defensive reasons, it's better to make a copy of the slice.
+
+// we can make a copy of the slice and then modify it. Function programming. Immutable. Or use full slice expression
+// [low:high:max] capacity = max-low
+
+- When we use a slice when its capacity if larger than its length, we need to be aware that appending could lead to unintended side effects.
+// When using slicing, we must remember that we can face a situation leading to unintended side effects.
+// If the resulting slice has a length smaller than its capacity, append can mutate the original slice.
+// If we want to restrict the range of possible side effects, we can use either a slice copy or the full slice expression,
+// which prevents us from doing a copy.
+
+## Memory leaks
+
+## Leaking capacity
+
+.play ./examples/memory-leak/capacity-leak/main.go
+
+## Full slice expression
+
+`slice[low:high:max]`.
+
+- Low: inclusive index
+- High: exclusive index
+- Max: determines the slices capacity.
+```
+Capacity = Max - Low
+```
+
+## Trying to fix memory leak
+
+.play ./examples/memory-leak/full-slice-expression/main.go
+
+
+## Fix memory leak
+
+.play ./examples/memory-leak/leak-fix/main.go
+
+## Key Takeaway
+
+As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
+The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
+
+Solution:
+
+1. Make a slice copy (copy only part of the original slice to reduce its capacity).
+
+// Remember that when creating a slice, the capacity will follow the original slice.
+// for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
+// As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
+// The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
+// Using a slice copy is the solution to prevent such a case.
+
+// Using full slice expression doesn't help in this case even calling `runtime.GC()` specifically
+
+## Recap: what we covered?
+
+Definitions
+- Slice vs Array
+- Slice Length vs Capacity
+- Slice initialisations
+
+Potential problems with slices
+- Performance: map from a slice to another slice
+- Side-effects: built-in copy function
+- Side-effects: built-in append function
+- Performance: slice memory leak
+
+## Special Thanks
+
+[100 Go Mistakes and How to Avoid Them](https://www.manning.com/books/100-go-mistakes-and-how-to-avoid-them)
+
+By Teiva Harsanyi
+
+.image ./images/book.png

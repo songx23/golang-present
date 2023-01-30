@@ -1,2 +1,6 @@
 # golang-present
- Presentaion for talks related to Go
+ Presentations slides for talks related to Go
+
+## slices
+
+ 2023 Feb 21 Melbourne Golang Meetup
