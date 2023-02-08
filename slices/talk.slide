@@ -71,16 +71,10 @@ Slice has context information on top of the underlying array. The 2 most importa
 
 *That's why we normally don't see the third and fourth slice initialisation.*
 - Regardless of whether a slice is nil, calling the `append` function works, `range` operator also works.
-- When we need to marshal a slice to json.
-
-nil slice -> `{}`
-
-empty slice -> `{"slice": []}`
 
 ## How can we make use of capacity and length?
 
 Imagine if we have a mapper function like below:
-
 
 
 ```go
@@ -132,6 +126,7 @@ func mapWithPredefinedLength(a []string) []string {
 	return b
 }
 ```
+// mention that using append in the third approach could cause problems as the make function initialised with values
 
 ## Benchmark
 
@@ -155,29 +150,6 @@ Benchmark_mapWithPredefinedLength-10      	     746	   1600166 ns/op
 **Key takeaway**:
 
 When initialising a slice, if we know its maximum possible capacity, in most cases, we should declare it with max capacity instead of creating a nil slice.
-
-## 2 built-in functions relates to slices
-
-1. `copy`
-2. `append`
-
-## Gotcha of the built-in copy function
-
-.play ./examples/slice-copy/main.go
-
-What could possibly go wrong here?
-
-## Gotcha of the built-in copy function
-
-.play ./examples/slice-copy-correct/main.go
-
-**Key takeaway**:
-
-The number of elements copied to the destination slice is determined by the **minimum** between:
-
-
-the source slice’s **length** & the destination slice’s **length**.
-
 
 ## Slice appending side-effects
 
@@ -232,6 +204,8 @@ Capacity = Max - Low
 
 .play ./examples/memory-leak/leak-fix/main.go
 
+// Mention The number of elements copied to the destination slice is determined by the **minimum** between: the source slice’s **length** & the destination slice’s **length**.
+
 ## Key Takeaway
 
 As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
@@ -239,7 +213,7 @@ The remaining space won’t be reclaimed by the GC, and we can keep a large back
 
 Solution:
 
-1. Make a slice copy (copy only part of the original slice to reduce its capacity).
+Make a slice copy (copy only part of the original slice to reduce its capacity).
 
 // Remember that when creating a slice, the capacity will follow the original slice.
 // for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
@@ -249,18 +223,11 @@ Solution:
 
 // Using full slice expression doesn't help in this case even calling `runtime.GC()` specifically
 
-## Recap: what we covered?
+Note that this could introduce a speed penalty. Benchmark for using slice expression and copy function:
 
-Definitions
-- Slice vs Array
-- Slice Length vs Capacity
-- Slice initialisations
+Slice expression   0.3154 ns/op
 
-Potential problems with slices
-- Performance: map from a slice to another slice
-- Side-effects: built-in copy function
-- Side-effects: built-in append function
-- Performance: slice memory leak
+Copy function      0.6423 ns/op
 
 ## Special Thanks
 
