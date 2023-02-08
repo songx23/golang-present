@@ -4,18 +4,19 @@ import "fmt"
 
 func main() {
 	var s []string
-	log(1, s)
+	// empty: true | nil: true  | len: 0 | cap: 0
 
 	s = []string(nil)
-	log(2, s)
+	// empty: true | nil: true  | len: 0 | cap: 0
 
 	s = []string{}
-	log(3, s)
+	// empty: true | nil: false | len: 0 | cap: 0
 
 	s = make([]string, 0)
-	log(4, s)
-}
+	// empty: true | nil: false | len: 0 | cap: 0
 
-func log(i int, s []string) {
-	fmt.Printf("%d: empty=%t\nnil=%t\n", i, len(s) == 0, s == nil)
+	s = make([]string, 1, 10)
+	// len: 1 | cap: 10
+
+	fmt.Println(s) // ignore this line, it's here just to keep the compiler happy
 }
