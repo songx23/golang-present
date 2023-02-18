@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 func main() {
 	s1 := []int{1, 2, 3}
@@ -16,6 +19,6 @@ func main() {
 	// len: 2 | cap: 2
 	// what's s1?
 
-	fmt.Println(s3)
 	fmt.Println(s1)
+	runtime.KeepAlive(s3) // Ignore this line, it's just there for compilation.
 }
