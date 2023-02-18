@@ -2,19 +2,22 @@
 21 February 2023
 
 Song Xue
-Lead Software Engineer, Digio
 song.xue@digio.com.au
 https://github.com/songx23/golang-present
 
-## Slice
+## About me
 
-Probably the *MOST* used data structure in Go.
-// Very hard to not write something to do with slice in day-to-day coding.
+- Lead Software Engineer, Digio
+- Have about 4 years of software developing experience using Go
+- Worked in Latitude Financial Service
+- Working in ANZ Plus
 
+## What we will cover
 
-But even the most familiar data structure has some dark secrets, which could cause unexpected problems.
-// Let's uncover them today.
-// Firstly, let's go over some basic concepts.
+- Concepts (slice/array, length/capacity)
+- How to use capacity to improve performance
+- Side effects of the `append` function
+- Memory leak when dealing with slices
 
 ## Slice vs Array
 
@@ -57,22 +60,7 @@ Slice has context information on top of the underlying array. The 2 most importa
 - The length of a slice is the number of elements it contains.
 - The capacity of a slice is the number of elements in the underlying array, counting from the first element in the slice.
 
-## Slice initialisation
-
-.code examples/slice-init/main.go
-
-// a slice is empty if its length is equal to 0
-// a slice is nil if it equals to nil
-
-## Slice initialisation (nil vs empty)
-
-**Key takeaways:**
-- Initializing a nil slice doesn't require any allocation. Returning a nil slice is preferred as it doesn't require any allocations.
-
-*That's why we normally don't see the third and fourth slice initialisation.*
-- Regardless of whether a slice is nil, calling the `append` function works, `range` operator also works.
-
-## How can we make use of capacity and length?
+## How can we make use of capacity?
 
 Imagine if we have a mapper function like below:
 
@@ -85,6 +73,12 @@ func mapWithNilSlice(a []string) []string {
 	}
 	return b
 }
+```
+
+```go
+
+mapWithNilSlice([]string{"alice", "bob", "chad", "david", "eliza"})
+[ALICE, BOB, CHAD, DAVID, ELIZA]
 ```
 
 ## What happened under the hood?
@@ -149,7 +143,7 @@ Benchmark_mapWithPredefinedLength-10      	     746	   1600166 ns/op
 
 **Key takeaway**:
 
-When initialising a slice, if we know its maximum possible capacity, in most cases, we should declare it with max capacity instead of creating a nil slice.
+When performance is critical, we should declare a slice with max capacity instead of creating a nil slice.
 
 ## Slice appending side-effects
 
@@ -167,16 +161,16 @@ When initialising a slice, if we know its maximum possible capacity, in most cas
 
 **Key takeaways**:
 
-- Be careful when passing a slice into a function. The function could change the slice elements. For defensive reasons, it's better to make a copy of the slice.
-
-// we can make a copy of the slice and then modify it. Function programming. Immutable. Or use full slice expression
-// [low:high:max] capacity = max-low
-
-- When we use a slice when its capacity if larger than its length, we need to be aware that appending could lead to unintended side effects.
+- When the capacity of a slice if larger than its length, we need to be aware that appending could lead to unintended side effects.
 // When using slicing, we must remember that we can face a situation leading to unintended side effects.
 // If the resulting slice has a length smaller than its capacity, append can mutate the original slice.
 // If we want to restrict the range of possible side effects, we can use either a slice copy or the full slice expression,
 // which prevents us from doing a copy.
+
+- Be careful when passing a slice like this into a function. For defensive reasons, it's better to make a copy of the slice.
+
+// we can make a copy of the slice and then modify it. Function programming. Immutable. Or use full slice expression
+// [low:high:max] capacity = max-low
 
 ## Memory leaks
 
@@ -209,11 +203,7 @@ Capacity = Max - Low
 ## Key Takeaway
 
 As a rule of thumb, remember that slicing a large slice or array can lead to potential high memory consumption.
-The remaining space won’t be reclaimed by the GC, and we can keep a large backing array despite using only a few elements.
-
-Solution:
-
-Make a slice copy (copy only part of the original slice to reduce its capacity).
+The remaining space allocated for the backing array won’t be reclaimed by the GC even though we are only using a few elements from it.
 
 // Remember that when creating a slice, the capacity will follow the original slice.
 // for example creating a [:5] slice based on a one-million-item array, the capacity will be 1mil-5
@@ -223,7 +213,7 @@ Make a slice copy (copy only part of the original slice to reduce its capacity).
 
 // Using full slice expression doesn't help in this case even calling `runtime.GC()` specifically
 
-Note that this could introduce a speed penalty. Benchmark for using slice expression and copy function:
+Note: this copy behaviour could introduce a performance penalty (speed). Benchmark for using slice expression and copy function:
 
 Slice expression   0.3154 ns/op
 

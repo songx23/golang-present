@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"runtime"
+)
+
 func main() {
 	s1 := []int{1, 2, 3}
 	// s1: [1, 2, 3]
@@ -13,10 +18,7 @@ func main() {
 	// s3: [2, 4]
 	// len: 2 | cap: 2
 	// what's s1?
-	// s1: [1, 2, 4]
-	// len: 3 | cap: 3
 
-	s3 = append(s3, 5)
-	// s3: [2, 4, 5]
-	// len: 3 | cap: 4
+	fmt.Println(s1)
+	runtime.KeepAlive(s3) // Ignore this line, it's just there for compilation.
 }
